@@ -67,7 +67,7 @@
 }
 
 - (void)session:(MCSession *)session didReceiveData:(NSData *)data fromPeer:(MCPeerID *)peerID {
-    UIImage* image = [UIImage imageWithData:data];
+    UIImage* image = [UIImage imageWithData:data scale:2.0];
     dispatch_async(dispatch_get_main_queue(), ^{
         self.imagePreview.image = image;
     });
