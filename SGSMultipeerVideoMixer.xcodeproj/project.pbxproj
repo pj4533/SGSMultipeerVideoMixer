@@ -393,6 +393,7 @@
 				GCC_PREFIX_HEADER = "SGSMultipeerVideoMixer/SGSMultipeerVideoMixer-Prefix.pch";
 				INFOPLIST_FILE = "SGSMultipeerVideoMixer/SGSMultipeerVideoMixer-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "DABAFC0A-7105-4F41-A60C-C8BB68EE4440";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -406,6 +407,7 @@
 				GCC_PREFIX_HEADER = "SGSMultipeerVideoMixer/SGSMultipeerVideoMixer-Prefix.pch";
 				INFOPLIST_FILE = "SGSMultipeerVideoMixer/SGSMultipeerVideoMixer-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "DABAFC0A-7105-4F41-A60C-C8BB68EE4440";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -471,6 +473,7 @@
 				0A0886861870975B005D8BE6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0A0886871870975B005D8BE6 /* Build configuration list for PBXNativeTarget "SGSMultipeerVideoMixerTests" */ = {
 			isa = XCConfigurationList;
@@ -479,6 +482,7 @@
 				0A0886891870975B005D8BE6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
