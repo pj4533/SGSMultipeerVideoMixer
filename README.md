@@ -5,6 +5,8 @@ Receives the video from [SGSMultipeerVideo](https://github.com/pj4533/SGSMultipe
 
 Supports multiple streams of video, displays in a UICollectionView.
 
+In progress...but a fun example.
+
 ## To Do
 
 * how many streams work?
