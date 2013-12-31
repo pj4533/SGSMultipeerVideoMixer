@@ -23,6 +23,7 @@
 		0A0886811870975B005D8BE6 /* SGSMultipeerVideoMixerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A0886801870975B005D8BE6 /* SGSMultipeerVideoMixerTests.m */; };
 		0A08868B18709768005D8BE6 /* MultipeerConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A08868A18709768005D8BE6 /* MultipeerConnectivity.framework */; };
 		0A08868D18709771005D8BE6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A08868C18709771005D8BE6 /* AVFoundation.framework */; };
+		0AFAE3FD18724A1300300675 /* SGSImageViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0AFAE3FC18724A1300300675 /* SGSImageViewCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,8 @@
 		0A0886801870975B005D8BE6 /* SGSMultipeerVideoMixerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SGSMultipeerVideoMixerTests.m; sourceTree = "<group>"; };
 		0A08868A18709768005D8BE6 /* MultipeerConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MultipeerConnectivity.framework; path = System/Library/Frameworks/MultipeerConnectivity.framework; sourceTree = SDKROOT; };
 		0A08868C18709771005D8BE6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		0AFAE3FB18724A1300300675 /* SGSImageViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGSImageViewCell.h; sourceTree = "<group>"; };
+		0AFAE3FC18724A1300300675 /* SGSImageViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SGSImageViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +123,8 @@
 		0A08865B1870975B005D8BE6 /* SGSMultipeerVideoMixer */ = {
 			isa = PBXGroup;
 			children = (
+				0AFAE3FB18724A1300300675 /* SGSImageViewCell.h */,
+				0AFAE3FC18724A1300300675 /* SGSImageViewCell.m */,
 				0A0886641870975B005D8BE6 /* SGSAppDelegate.h */,
 				0A0886651870975B005D8BE6 /* SGSAppDelegate.m */,
 				0A0886671870975B005D8BE6 /* Main.storyboard */,
@@ -258,6 +263,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0AFAE3FD18724A1300300675 /* SGSImageViewCell.m in Sources */,
 				0A08866C1870975B005D8BE6 /* SGSViewController.m in Sources */,
 				0A0886661870975B005D8BE6 /* SGSAppDelegate.m in Sources */,
 				0A0886621870975B005D8BE6 /* main.m in Sources */,

@@ -8,15 +8,19 @@
 
 #import "SGSViewController.h"
 #import <AVFoundation/AVFoundation.h>
+#import "SGSImageViewCell.h"
 
 #import <MultipeerConnectivity/MultipeerConnectivity.h>
 
-@interface SGSViewController () <MCBrowserViewControllerDelegate, MCSessionDelegate, NSStreamDelegate> {
+@interface SGSViewController () <MCBrowserViewControllerDelegate, MCSessionDelegate, UICollectionViewDataSource, UICollectionViewDelegate> {
     MCPeerID *_myDevicePeerId;
     MCSession *_session;
+    
+    NSMutableDictionary* _indexPathsByPeerId;
 }
 
-@property (weak, nonatomic) IBOutlet UIImageView *imagePreview;
+@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+@property (nonatomic, assign) NSInteger cellCount;
 
 @end
 
@@ -25,7 +29,16 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
+    [self.collectionView addGestureRecognizer:tapRecognizer];
 
+
+    _indexPathsByPeerId = @{}.mutableCopy;
+    
+    self.cellCount = 0;
+    [self.collectionView reloadData];
+    
     _myDevicePeerId = [[MCPeerID alloc] initWithDisplayName:[[UIDevice currentDevice] name]];
     
     _session = [[MCSession alloc] initWithPeer:_myDevicePeerId securityIdentity:nil encryptionPreference:MCEncryptionNone];
@@ -48,28 +61,62 @@
     [self presentViewController:browserVC animated:YES completion:nil];
 }
 
+- (void)handleTapGesture:(UITapGestureRecognizer *)sender {
+    
+    if (sender.state == UIGestureRecognizerStateEnded) {
+        [self showAssistant];
+    }
+}
+
+#pragma mark - UICollectionView
+
+- (NSInteger)collectionView:(UICollectionView *)view numberOfItemsInSection:(NSInteger)section;
+{
+    return self.cellCount;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)cv cellForItemAtIndexPath:(NSIndexPath *)indexPath;
+{
+    SGSImageViewCell *cell = [cv dequeueReusableCellWithReuseIdentifier:@"ImageViewCell" forIndexPath:indexPath];
+    
+    return cell;
+}
+
+
 #pragma mark - MCSessionDelegate Methods
 
 - (void)session:(MCSession *)session peer:(MCPeerID *)peerID didChangeState:(MCSessionState)state {
 	switch (state) {
-		case MCSessionStateConnected:
+		case MCSessionStateConnected: {
             NSLog(@"PEER CONNECTED: %@", peerID.displayName);
-            [self dismissViewControllerAnimated:YES completion:nil];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self dismissViewControllerAnimated:YES completion:nil];
+                
+                NSIndexPath* indexPath = [NSIndexPath indexPathForItem:self.cellCount inSection:0];
+                _indexPathsByPeerId[peerID.displayName] = indexPath;
+                self.cellCount = self.cellCount + 1;
+                [self.collectionView reloadData];
+            });
+            
 			break;
+        }
 		case MCSessionStateConnecting:
             NSLog(@"PEER CONNECTING: %@", peerID.displayName);
 			break;
-		case MCSessionStateNotConnected:
+		case MCSessionStateNotConnected: {
             NSLog(@"PEER NOT CONNECTED: %@", peerID.displayName);
             [self showAssistant];
 			break;
+        }
 	}
 }
 
 - (void)session:(MCSession *)session didReceiveData:(NSData *)data fromPeer:(MCPeerID *)peerID {
     UIImage* image = [UIImage imageWithData:data scale:2.0];
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.imagePreview.image = image;
+        NSIndexPath* indexPath = _indexPathsByPeerId[peerID.displayName];
+        SGSImageViewCell* cell = (SGSImageViewCell*) [self.collectionView cellForItemAtIndexPath:indexPath];
+        cell.imageView.image = image;
     });
 }
 
