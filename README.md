@@ -11,6 +11,8 @@ In progress...but a fun example.
 
 * how many streams work?
 * remove cells that disconnect
+* don't use built in assistant UI - connect automagically
+* look into using OGL for displaying in cells for performance
 
 ## Contact
 
