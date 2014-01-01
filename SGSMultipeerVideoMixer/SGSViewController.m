@@ -9,6 +9,7 @@
 #import "SGSViewController.h"
 #import <AVFoundation/AVFoundation.h>
 #import "SGSImageViewCell.h"
+#import "SGSVideoPeer.h"
 
 #import <MultipeerConnectivity/MultipeerConnectivity.h>
 
@@ -16,7 +17,9 @@
     MCPeerID *_myDevicePeerId;
     MCSession *_session;
     
-    NSMutableDictionary* _indexPathsByPeerId;
+    NSMutableDictionary* _peers;
+    
+    NSTimer* _playerClock;
 }
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
@@ -30,12 +33,18 @@
 {
     [super viewDidLoad];
     
+    _peers = @{}.mutableCopy;
+    
+    // make clocks individual when adjusting framerate
+    _playerClock = [NSTimer scheduledTimerWithTimeInterval:(1.0/5.0)
+                                     target:self
+                                   selector:@selector(playerClockTick)
+                                   userInfo:nil
+                                    repeats:YES];
+    
     UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     [self.collectionView addGestureRecognizer:tapRecognizer];
 
-
-    _indexPathsByPeerId = @{}.mutableCopy;
-    
     self.cellCount = 0;
     [self.collectionView reloadData];
     
@@ -68,6 +77,37 @@
     }
 }
 
+// AUTO LOWER FRAMERATE BASED ON CONNECTION SPEED TO MATCH SENDER
+// Every clock tick, if playing: if the number of buffered frames goes down
+//      then send a msg saying to lower the framerate
+// else every 5th clocktick if it has stayed the same
+//      then send a msg saying to raise the framerate
+- (void) playerClockTick {
+    for (MCPeerID* peerID in _session.connectedPeers) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            SGSVideoPeer* thisVideoPeer = _peers[peerID.displayName];
+            NSLog(@"(%@) frames: %d", peerID.displayName, thisVideoPeer.frames.count);
+            if (thisVideoPeer.isPlaying) {
+                if (thisVideoPeer.frames.count > 1) {
+                    
+            
+                    SGSImageViewCell* cell = (SGSImageViewCell*) [self.collectionView cellForItemAtIndexPath:thisVideoPeer.indexPath];
+                    cell.imageView.image = thisVideoPeer.frames[0];
+                    [thisVideoPeer.frames removeObjectAtIndex:0];
+                    
+                    
+                } else {
+                    thisVideoPeer.isPlaying = NO;
+                }
+            } else {
+                if (thisVideoPeer.frames.count > 10) {
+                    thisVideoPeer.isPlaying = YES;
+                }
+            }
+        });
+    }
+}
+
 #pragma mark - UICollectionView
 
 - (NSInteger)collectionView:(UICollectionView *)view numberOfItemsInSection:(NSInteger)section;
@@ -93,7 +133,12 @@
                 [self dismissViewControllerAnimated:YES completion:nil];
                 
                 NSIndexPath* indexPath = [NSIndexPath indexPathForItem:self.cellCount inSection:0];
-                _indexPathsByPeerId[peerID.displayName] = indexPath;
+
+                SGSVideoPeer* newVideoPeer = [[SGSVideoPeer alloc] init];
+                newVideoPeer.indexPath = indexPath;
+                
+                _peers[peerID.displayName] = newVideoPeer;
+                
                 self.cellCount = self.cellCount + 1;
                 [self.collectionView reloadData];
             });
@@ -112,12 +157,16 @@
 }
 
 - (void)session:(MCSession *)session didReceiveData:(NSData *)data fromPeer:(MCPeerID *)peerID {
-    UIImage* image = [UIImage imageWithData:data scale:2.0];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSIndexPath* indexPath = _indexPathsByPeerId[peerID.displayName];
-        SGSImageViewCell* cell = (SGSImageViewCell*) [self.collectionView cellForItemAtIndexPath:indexPath];
-        cell.imageView.image = image;
-    });
+    
+    NSDictionary* dict = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    UIImage* image = [UIImage imageWithData:dict[@"image"] scale:2.0];
+    
+    SGSVideoPeer* thisVideoPeer = _peers[peerID.displayName];
+    [thisVideoPeer.frames addObject:image];
+
+//    NSNumber* currentTimestamp = dict[@"timestamp"];
+//    NSData *returnMsg = [NSKeyedArchiver archivedDataWithRootObject:currentTimestamp];
+//    [_session sendData:returnMsg toPeers:@[peerID] withMode:MCSessionSendDataReliable error:nil];
 }
 
 - (void)session:(MCSession *)session didReceiveStream:(NSInputStream *)stream withName:(NSString *)streamName fromPeer:(MCPeerID *)peerID {
