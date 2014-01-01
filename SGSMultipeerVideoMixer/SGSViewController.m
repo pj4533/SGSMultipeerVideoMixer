@@ -13,13 +13,11 @@
 
 #import <MultipeerConnectivity/MultipeerConnectivity.h>
 
-@interface SGSViewController () <MCBrowserViewControllerDelegate, MCSessionDelegate, UICollectionViewDataSource, UICollectionViewDelegate> {
+@interface SGSViewController () <MCBrowserViewControllerDelegate, MCSessionDelegate, UICollectionViewDataSource, UICollectionViewDelegate, SGSVideoPeerDelegate> {
     MCPeerID *_myDevicePeerId;
     MCSession *_session;
     
     NSMutableDictionary* _peers;
-    
-    NSTimer* _playerClock;
 }
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
@@ -34,13 +32,6 @@
     [super viewDidLoad];
     
     _peers = @{}.mutableCopy;
-    
-    // make clocks individual when adjusting framerate
-    _playerClock = [NSTimer scheduledTimerWithTimeInterval:(1.0/5.0)
-                                     target:self
-                                   selector:@selector(playerClockTick)
-                                   userInfo:nil
-                                    repeats:YES];
     
     UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     [self.collectionView addGestureRecognizer:tapRecognizer];
@@ -77,37 +68,6 @@
     }
 }
 
-// AUTO LOWER FRAMERATE BASED ON CONNECTION SPEED TO MATCH SENDER
-// Every clock tick, if playing: if the number of buffered frames goes down
-//      then send a msg saying to lower the framerate
-// else every 5th clocktick if it has stayed the same
-//      then send a msg saying to raise the framerate
-- (void) playerClockTick {
-    for (MCPeerID* peerID in _session.connectedPeers) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            SGSVideoPeer* thisVideoPeer = _peers[peerID.displayName];
-            NSLog(@"(%@) frames: %d", peerID.displayName, thisVideoPeer.frames.count);
-            if (thisVideoPeer.isPlaying) {
-                if (thisVideoPeer.frames.count > 1) {
-                    
-            
-                    SGSImageViewCell* cell = (SGSImageViewCell*) [self.collectionView cellForItemAtIndexPath:thisVideoPeer.indexPath];
-                    cell.imageView.image = thisVideoPeer.frames[0];
-                    [thisVideoPeer.frames removeObjectAtIndex:0];
-                    
-                    
-                } else {
-                    thisVideoPeer.isPlaying = NO;
-                }
-            } else {
-                if (thisVideoPeer.frames.count > 10) {
-                    thisVideoPeer.isPlaying = YES;
-                }
-            }
-        });
-    }
-}
-
 #pragma mark - UICollectionView
 
 - (NSInteger)collectionView:(UICollectionView *)view numberOfItemsInSection:(NSInteger)section;
@@ -134,8 +94,8 @@
                 
                 NSIndexPath* indexPath = [NSIndexPath indexPathForItem:self.cellCount inSection:0];
 
-                SGSVideoPeer* newVideoPeer = [[SGSVideoPeer alloc] init];
-                newVideoPeer.indexPath = indexPath;
+                SGSVideoPeer* newVideoPeer = [[SGSVideoPeer alloc] initWithPeer:peerID atIndexPath:indexPath];
+                newVideoPeer.delegate = self;
                 
                 _peers[peerID.displayName] = newVideoPeer;
                 
@@ -162,7 +122,7 @@
     UIImage* image = [UIImage imageWithData:dict[@"image"] scale:2.0];
     
     SGSVideoPeer* thisVideoPeer = _peers[peerID.displayName];
-    [thisVideoPeer.frames addObject:image];
+    [thisVideoPeer addImageFrame:image];
 
 //    NSNumber* currentTimestamp = dict[@"timestamp"];
 //    NSData *returnMsg = [NSKeyedArchiver archivedDataWithRootObject:currentTimestamp];
@@ -186,6 +146,15 @@
 
 - (void)browserViewControllerWasCancelled:(MCBrowserViewController *)browserViewController {
     [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+#pragma mark - SGSVideoPeerDelegate
+
+- (void) showImage:(UIImage *)image atIndexPath:(NSIndexPath *)indexPath {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        SGSImageViewCell* cell = (SGSImageViewCell*) [self.collectionView cellForItemAtIndexPath:indexPath];
+        cell.imageView.image = image;
+    });
 }
 
 @end

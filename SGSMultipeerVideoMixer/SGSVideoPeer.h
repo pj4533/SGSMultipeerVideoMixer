@@ -7,11 +7,17 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <MultipeerConnectivity/MultipeerConnectivity.h>
+
+@protocol SGSVideoPeerDelegate <NSObject>
+- (void) showImage:(UIImage*) image atIndexPath:(NSIndexPath*) indexPath;
+@end
 
 @interface SGSVideoPeer : NSObject
 
-@property (strong, nonatomic) NSMutableArray* frames;
-@property BOOL isPlaying;
-@property (strong, nonatomic) NSIndexPath* indexPath;
+@property (strong, nonatomic) id delegate;
+
+- (instancetype) initWithPeer:(MCPeerID*) peerID atIndexPath:(NSIndexPath*) indexPath;
+- (void) addImageFrame:(UIImage*) image;
 
 @end
