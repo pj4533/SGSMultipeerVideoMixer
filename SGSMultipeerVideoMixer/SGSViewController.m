@@ -120,13 +120,10 @@
     
     NSDictionary* dict = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
     UIImage* image = [UIImage imageWithData:dict[@"image"] scale:2.0];
+    NSNumber* framesPerSecond = dict[@"framesPerSecond"];
     
     SGSVideoPeer* thisVideoPeer = _peers[peerID.displayName];
-    [thisVideoPeer addImageFrame:image];
-
-//    NSNumber* currentTimestamp = dict[@"timestamp"];
-//    NSData *returnMsg = [NSKeyedArchiver archivedDataWithRootObject:currentTimestamp];
-//    [_session sendData:returnMsg toPeers:@[peerID] withMode:MCSessionSendDataReliable error:nil];
+    [thisVideoPeer addImageFrame:image withFPS:framesPerSecond];
 }
 
 - (void)session:(MCSession *)session didReceiveStream:(NSInputStream *)stream withName:(NSString *)streamName fromPeer:(MCPeerID *)peerID {
@@ -155,6 +152,18 @@
         SGSImageViewCell* cell = (SGSImageViewCell*) [self.collectionView cellForItemAtIndexPath:indexPath];
         cell.imageView.image = image;
     });
+}
+
+- (void) raiseFramerateForPeer:(MCPeerID *)peerID {
+    NSLog(@"(%@) raise framerate", peerID.displayName);
+    NSData* data = [@"raiseFramerate" dataUsingEncoding:NSUTF8StringEncoding];
+    [_session sendData:data toPeers:@[peerID] withMode:MCSessionSendDataReliable error:nil];
+}
+
+- (void) lowerFramerateForPeer:(MCPeerID *)peerID {
+    NSLog(@"(%@) lower framerate", peerID.displayName);
+    NSData* data = [@"lowerFramerate" dataUsingEncoding:NSUTF8StringEncoding];
+    [_session sendData:data toPeers:@[peerID] withMode:MCSessionSendDataReliable error:nil];
 }
 
 @end
