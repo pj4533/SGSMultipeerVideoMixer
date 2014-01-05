@@ -1,7 +1,7 @@
 SGSMultipeerVideoMixer
 ======================
 
-Receives the video from [SGSMultipeerVideo](https://github.com/pj4533/SGSMultipeerVideo)
+Receives the video from app(s) advertising using  [AVCaptureMultipeerVideoDataOutput](https://github.com/pj4533/AVCaptureMultipeerVideoDataOutput)
 
 Supports multiple streams of video, displays in a UICollectionView.
 
