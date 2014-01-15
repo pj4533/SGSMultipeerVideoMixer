@@ -23,5 +23,6 @@
 - (instancetype) initWithPeer:(MCPeerID*) peerID atIndexPath:(NSIndexPath*) indexPath;
 
 - (void) addImageFrame:(UIImage*) image withFPS:(NSNumber*) fps;
+- (void) stopPlaying;
 
 @end

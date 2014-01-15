@@ -13,9 +13,10 @@
 
 #import <MultipeerConnectivity/MultipeerConnectivity.h>
 
-@interface SGSViewController () <MCBrowserViewControllerDelegate, MCSessionDelegate, UICollectionViewDataSource, UICollectionViewDelegate, SGSVideoPeerDelegate> {
+@interface SGSViewController () <MCNearbyServiceBrowserDelegate, MCSessionDelegate, UICollectionViewDataSource, UICollectionViewDelegate, SGSVideoPeerDelegate> {
     MCPeerID *_myDevicePeerId;
     MCSession *_session;
+    MCNearbyServiceBrowser *_browser;
     
     NSMutableDictionary* _peers;
 }
@@ -33,9 +34,6 @@
     
     _peers = @{}.mutableCopy;
     
-    UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
-    [self.collectionView addGestureRecognizer:tapRecognizer];
-
     self.cellCount = 0;
     [self.collectionView reloadData];
     
@@ -43,29 +41,20 @@
     
     _session = [[MCSession alloc] initWithPeer:_myDevicePeerId securityIdentity:nil encryptionPreference:MCEncryptionNone];
     _session.delegate = self;
+    
+    _browser = [[MCNearbyServiceBrowser alloc] initWithPeer:_myDevicePeerId serviceType:@"multipeer-video"];
+    _browser.delegate = self;
+    [_browser startBrowsingForPeers];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
-    [self showAssistant];
+//    [self showAssistant];
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
-}
-
-- (void) showAssistant {
-    MCBrowserViewController* browserVC = [[MCBrowserViewController alloc] initWithServiceType:@"multipeer-video" session:_session];
-    browserVC.delegate = self;
-    [self presentViewController:browserVC animated:YES completion:nil];
-}
-
-- (void)handleTapGesture:(UITapGestureRecognizer *)sender {
-    
-    if (sender.state == UIGestureRecognizerStateEnded) {
-        [self showAssistant];
-    }
 }
 
 #pragma mark - UICollectionView
@@ -90,8 +79,6 @@
 		case MCSessionStateConnected: {
             NSLog(@"PEER CONNECTED: %@", peerID.displayName);
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self dismissViewControllerAnimated:YES completion:nil];
-                
                 NSIndexPath* indexPath = [NSIndexPath indexPathForItem:self.cellCount inSection:0];
 
                 SGSVideoPeer* newVideoPeer = [[SGSVideoPeer alloc] initWithPeer:peerID atIndexPath:indexPath];
@@ -110,13 +97,26 @@
 			break;
 		case MCSessionStateNotConnected: {
             NSLog(@"PEER NOT CONNECTED: %@", peerID.displayName);
-            [self showAssistant];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                SGSVideoPeer* peer = _peers[peerID.displayName];
+                [peer stopPlaying];
+                peer = nil;
+                
+                [_peers removeObjectForKey:peerID.displayName];
+                
+                self.cellCount = self.cellCount - 1;
+                [self.collectionView reloadData];
+            });
 			break;
         }
 	}
 }
 
 - (void)session:(MCSession *)session didReceiveData:(NSData *)data fromPeer:(MCPeerID *)peerID {
+    
+//    NSLog(@"(%@) Read %d bytes", peerID.displayName, data.length);
     
     NSDictionary* dict = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
     UIImage* image = [UIImage imageWithData:dict[@"image"] scale:2.0];
@@ -135,14 +135,18 @@
 - (void)session:(MCSession *)session didFinishReceivingResourceWithName:(NSString *)resourceName fromPeer:(MCPeerID *)peerID atURL:(NSURL *)localURL withError:(NSError *)error {
 }
 
-#pragma mark - MCBroweserViewController
+#pragma mark - MCNearbyServiceBrowserDelegate
 
-- (void)browserViewControllerDidFinish:(MCBrowserViewController *)browserViewController {
-    [self dismissViewControllerAnimated:YES completion:nil];
+- (void) browser:(MCNearbyServiceBrowser *)browser didNotStartBrowsingForPeers:(NSError *)error {
+    
 }
 
-- (void)browserViewControllerWasCancelled:(MCBrowserViewController *)browserViewController {
-    [self dismissViewControllerAnimated:YES completion:nil];
+- (void) browser:(MCNearbyServiceBrowser *)browser foundPeer:(MCPeerID *)peerID withDiscoveryInfo:(NSDictionary *)info {
+    [browser invitePeer:peerID toSession:_session withContext:nil timeout:0];
+}
+
+- (void) browser:(MCNearbyServiceBrowser *)browser lostPeer:(MCPeerID *)peerID {
+    
 }
 
 #pragma mark - SGSVideoPeerDelegate

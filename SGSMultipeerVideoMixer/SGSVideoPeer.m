@@ -48,7 +48,7 @@
 - (void) playerClockTick {
     
     NSInteger delta = _frames.count - _numberOfFramesAtLastTick;
-    NSLog(@"(%@) frames total: %d  frames@last: %d delta: %d", _peerID.displayName, _frames.count, _numberOfFramesAtLastTick, delta);
+    NSLog(@"(%@) fps: %f frames total: %d  frames@last: %d delta: %d", _peerID.displayName, _fps.floatValue, _frames.count, _numberOfFramesAtLastTick, delta);
     _numberOfFramesAtLastTick = _frames.count;
     if (_isPlaying) {
         
@@ -112,6 +112,12 @@
         });
     }
     [_frames addObject:image];
+}
+
+- (void) stopPlaying {
+    if (_playerClock) {
+        [_playerClock invalidate];        
+    }
 }
 
 @end
